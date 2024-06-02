@@ -9,11 +9,7 @@ class ClientConfig:
     timeout: float = 1
     sleep_between_requests: float = 0.0
     output_filename: str = "ports.txt"
-
-
-@dataclass(frozen=True)
-class ServerConfig:
-    address: str = "http://127.0.0.1"
+    server_address = "http://127.0.0.1"
 
 
 @dataclass(frozen=True)
@@ -26,4 +22,3 @@ class Config:
         }
     )
     client: ClientConfig = ClientConfig()
-    server: ServerConfig = ServerConfig()

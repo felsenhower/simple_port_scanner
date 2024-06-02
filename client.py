@@ -26,9 +26,7 @@ class Client:
         self.text2open = dict([reversed(i) for i in self.config.open2text.items()])
 
     def set_test_port(self, test_port: int) -> bool:
-        endpoint = (
-            f"{self.config.server.address}:{self.config.management_port}/{test_port}"
-        )
+        endpoint = f"{self.config.client.server_address}:{self.config.management_port}/{test_port}"
         r = urllib.request.urlopen(endpoint)
         assert r.code == 200
         response_text = r.read().decode().strip().upper()
@@ -36,7 +34,7 @@ class Client:
         return is_open
 
     def query_test_port(self, test_port: int) -> bool:
-        endpoint = f"{self.config.server.address}:{test_port}/"
+        endpoint = f"{self.config.client.server_address}:{test_port}/"
         try:
             timeout = self.config.client.timeout
             r = urllib.request.urlopen(endpoint, data=None, timeout=timeout)
