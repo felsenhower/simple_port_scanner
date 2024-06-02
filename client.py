@@ -23,24 +23,21 @@ class Client:
         self.test_port_max = test_port_max
 
     def set_test_port(self, test_port: int) -> bool:
-        management_endpoint = (
-            f"{self.config.server.address}:{self.config.management_port}/"
-        )
-        r = requests.post(management_endpoint, json={"open": test_port})
+        endpoint = f"{self.config.server.address}:{self.config.management_port}/open/{test_port}"
+        r = requests.get(endpoint)
         assert r.status_code == 200
         response = r.json()
         is_open = response["open"]
         return is_open
 
     def query_test_port(self, test_port: int) -> bool:
-        test_endpoint = f"{self.config.server.address}:{test_port}/"
+        endpoint = f"{self.config.server.address}:{test_port}/"
         try:
-            r = requests.post(test_endpoint, json={"test": "test"}, timeout=1)
+            r = requests.get(endpoint, timeout=1)
         except requests.exceptions.Timeout:
             return False
-        response = r.json()
-        is_valid = response["valid"]
-        return is_valid
+        success = r.status_code == 200
+        return success
 
     def check_port(self, test_port) -> PortStatus:
         if not self.set_test_port(test_port):

@@ -6,6 +6,7 @@ import json
 import threading
 from urllib.parse import urlparse, parse_qs
 from config import Config
+import re
 
 
 def reply(handler, status_code, content_type, text):
@@ -13,14 +14,6 @@ def reply(handler, status_code, content_type, text):
     handler.send_header("Content-Type", content_type)
     handler.end_headers()
     handler.wfile.write(text.encode())
-
-
-def reply_ok(handler, response):
-    reply(handler, 200, "application/json", json.dumps(response))
-
-
-def reply_error(handler):
-    reply(handler, 400, "text/plain  ", "error")
 
 
 class PortListener:
@@ -37,21 +30,20 @@ class PortListener:
         return server
 
     class ManagementPortHandler(http.server.SimpleHTTPRequestHandler):
-        def do_POST(self):
+        def do_GET(self):
             try:
-                content_length = int(self.headers["Content-Length"])
-                post_data = self.rfile.read(content_length)
-                message = json.loads(post_data.decode())
-                new_port = message["open"]
+                m = re.match(r"^/open/(\d+)$", self.path)
+                new_port = int(m[1])
                 success = False
                 if new_port == self.server.listener.current_test_port:
                     success = True
                 if not success:
                     success = self.server.listener.open_test_port(new_port)
-            except:
-                reply_error(self)
+            except Exception as e:
+                print(f'Error: "{exception}"')
+                reply(self, 400, "text/plain", f'Bad Request: "{exception}"')
             else:
-                reply_ok(self, {"open": success})
+                reply(self, 200, "application/json", json.dumps({"open": success}))
 
         def log_message(self, format, *args):
             port = self.server.listener.config.management_port
@@ -60,17 +52,8 @@ class PortListener:
             return super().log_message(format, *args)
 
     class TestPortHandler(http.server.SimpleHTTPRequestHandler):
-        def do_POST(self):
-            try:
-                content_length = int(self.headers["Content-Length"])
-                post_data = self.rfile.read(content_length)
-                message = json.loads(post_data.decode())
-                if message != self.server.listener.config.test_message:
-                    raise ValueError()
-            except:
-                reply_error(self)
-            else:
-                reply_ok(self, {"valid": True})
+        def do_GET(self):
+            reply(self, 200, "text/plain", "OK")
 
         def log_message(self, format, *args):
             port = self.server.listener.current_test_port
