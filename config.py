@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 
 @dataclass(frozen=True)
 class ClientConfig:
-    test_ports: tuple[int, int] = (1, 65535)
+    test_ports: tuple[int, int] = (1024, 65535)
     timeout: float = 1
     sleep_between_requests: float = 0.0
     output_filename: str = "ports.txt"
