@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
 from config import Config
-import requests
 from enum import StrEnum, auto
 import time
 from pathlib import Path
-import json
+import urllib.request
 
 
 class PortStatus(StrEnum):
@@ -21,22 +20,28 @@ class Client:
         (test_port_min, test_port_max) = self.config.client.test_ports
         self.test_port_min = test_port_min
         self.test_port_max = test_port_max
+        self.text2open = dict([reversed(i) for i in self.config.open2text.items()])
 
     def set_test_port(self, test_port: int) -> bool:
-        endpoint = f"{self.config.server.address}:{self.config.management_port}/open/{test_port}"
-        r = requests.get(endpoint)
-        assert r.status_code == 200
-        response = r.json()
-        is_open = response["open"]
+        endpoint = (
+            f"{self.config.server.address}:{self.config.management_port}/{test_port}"
+        )
+        r = urllib.request.urlopen(endpoint)
+        assert r.code == 200
+        response_text = r.read().decode().strip().upper()
+        is_open = self.text2open[response_text]
         return is_open
 
     def query_test_port(self, test_port: int) -> bool:
         endpoint = f"{self.config.server.address}:{test_port}/"
         try:
-            r = requests.get(endpoint, timeout=1)
-        except requests.exceptions.Timeout:
-            return False
-        success = r.status_code == 200
+            r = urllib.request.urlopen(endpoint, data=None, timeout=1)
+        except urllib.error.URLError as e:
+            if isinstance(e.reason, TimeoutError):
+                return False
+            else:
+                raise e
+        success = r.code == 200
         return success
 
     def check_port(self, test_port) -> PortStatus:

@@ -2,16 +2,15 @@
 
 import http.server
 import socketserver
-import json
 import threading
 from urllib.parse import urlparse, parse_qs
 from config import Config
 import re
 
 
-def reply(handler, status_code, content_type, text):
+def reply(handler, status_code, text):
     handler.send_response(status_code)
-    handler.send_header("Content-Type", content_type)
+    handler.send_header("Content-Type", "text/plain")
     handler.end_headers()
     handler.wfile.write(text.encode())
 
@@ -32,7 +31,7 @@ class PortListener:
     class ManagementPortHandler(http.server.SimpleHTTPRequestHandler):
         def do_GET(self):
             try:
-                m = re.match(r"^/open/(\d+)$", self.path)
+                m = re.match(r"^/(\d+)$", self.path)
                 new_port = int(m[1])
                 success = False
                 if new_port == self.server.listener.current_test_port:
@@ -41,9 +40,10 @@ class PortListener:
                     success = self.server.listener.open_test_port(new_port)
             except Exception as e:
                 print(f'Error: "{e}"')
-                reply(self, 400, "text/plain", f'Bad Request: "{e}"')
+                reply(self, 400, f'Bad Request: "{e}"')
             else:
-                reply(self, 200, "application/json", json.dumps({"open": success}))
+                response_text = self.server.listener.config.open2text[success]
+                reply(self, 200, response_text)
 
         def log_message(self, format, *args):
             port = self.server.listener.config.management_port
@@ -53,7 +53,7 @@ class PortListener:
 
     class TestPortHandler(http.server.SimpleHTTPRequestHandler):
         def do_GET(self):
-            reply(self, 200, "text/plain", "OK")
+            reply(self, 200, "OK")
 
         def log_message(self, format, *args):
             port = self.server.listener.current_test_port
