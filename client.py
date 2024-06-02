@@ -14,6 +14,9 @@ class PortStatus(StrEnum):
     UNKNOWN_ERROR = auto()
 
 
+port_status_max_length = max(len(item.value) for item in PortStatus)
+
+
 class Client:
     def __init__(self):
         self.config = Config()
@@ -65,11 +68,17 @@ class Client:
                 port_status = self.check_port(test_port)
                 now = time.time()
                 num_ports_checked += 1
+                percent_done = (num_ports_checked / num_ports_to_check) * 100.0
                 elapsed = now - start_time
+                ports_per_second = num_ports_checked / elapsed
+                num_ports_left = num_ports_to_check - num_ports_checked
+                time_left = num_ports_left / ports_per_second
+                time_left_str = time.strftime("%H:%M:%S", time.gmtime(time_left))
+                port_status_str = str(port_status).upper()
                 print(
-                    f"Port {test_port:5d}: {port_status}. Checked {num_ports_checked} / {num_ports_to_check} Ports in {elapsed} seconds."
+                    f"Port {test_port:5d} - {port_status_str:<{port_status_max_length}s} - {percent_done:5.1f} % done - {time_left_str:>10} left"
                 )
-                f.write(f"{test_port} {port_status}\n")
+                f.write(f"{test_port} {port_status_str}\n")
                 time.sleep(self.config.client.sleep_between_requests)
 
 
