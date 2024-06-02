@@ -35,7 +35,8 @@ class Client:
     def query_test_port(self, test_port: int) -> bool:
         endpoint = f"{self.config.server.address}:{test_port}/"
         try:
-            r = urllib.request.urlopen(endpoint, data=None, timeout=1)
+            timeout = self.config.client.timeout
+            r = urllib.request.urlopen(endpoint, data=None, timeout=timeout)
         except urllib.error.URLError as e:
             if isinstance(e.reason, TimeoutError):
                 return False
