@@ -40,8 +40,8 @@ class PortListener:
                 if not success:
                     success = self.server.listener.open_test_port(new_port)
             except Exception as e:
-                print(f'Error: "{exception}"')
-                reply(self, 400, "text/plain", f'Bad Request: "{exception}"')
+                print(f'Error: "{e}"')
+                reply(self, 400, "text/plain", f'Bad Request: "{e}"')
             else:
                 reply(self, 200, "application/json", json.dumps({"open": success}))
 
