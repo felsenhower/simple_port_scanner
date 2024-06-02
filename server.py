@@ -3,7 +3,6 @@
 import http.server
 import socketserver
 import threading
-from urllib.parse import urlparse, parse_qs
 from config import Config
 import re
 
