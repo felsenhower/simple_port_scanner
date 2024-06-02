@@ -18,12 +18,12 @@ class ServerConfig:
 
 @dataclass(frozen=True)
 class Config:
+    management_port: int = 3000
     open2text: dict[bool, str] = field(
         default_factory=lambda: {
             True: "OPEN",
             False: "NOT_OPEN",
         }
     )
-    management_port: int = 3000
     client: ClientConfig = ClientConfig()
     server: ServerConfig = ServerConfig()
